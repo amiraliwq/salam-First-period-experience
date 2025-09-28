@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>سیستم حضور و غیاب دبیرستان</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#ffffff; --primary:#2c3e50; --muted:#7f8c8d; --accent:#16a085;
+      --danger:#c0392b; --glass: rgba(255,255,255,0.6);
+    }
+    *{box-sizing:border-box}
+    body { font-family: Tahoma, "Helvetica Neue", Arial, sans-serif; background:linear-gradient(180deg,var(--bg),#eef3f8); margin:0; padding:0; color:#222; }
+    header { background:var(--primary); color:#fff; padding:14px 12px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+    header h1{margin:0;font-size:20px}
+    main{max-width:1100px;margin:18px auto;padding:12px}
+    section.card{background:var(--card); border-radius:10px; padding:16px; margin-bottom:12px; box-shadow:0 6px 18px rgba(15,30,40,0.06);}
+    h2{margin:0 0 8px 0;color:var(--primary)}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    input[type=text],input[type=password],input[type=number],select,textarea{padding:8px;border-radius:6px;border:1px solid #d7dde6;font-size:14px;}
+    button{background:var(--accent);color:#fff;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600}
+    button.secondary{background:#3498db}
+    button.ghost{background:transparent;color:var(--primary);border:1px solid #d0d7df}
+    button.warn{background:var(--danger)}
+    .hidden{display:none}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    th,td{padding:8px;border:1px solid #e7eef6;text-align:center;font-size:14px}
+    th{background:#fbfdff;color:var(--muted)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .small{font-size:13px;padding:6px 8px;border-radius:6px}
+    #classButtons button{display:inline-block;margin:6px 6px 0 0}
+    .admin-area{background:linear-gradient(90deg,#fff,#fbfdff);padding:10px;border-radius:8px;border:1px solid #eef3f8;margin-top:8px}
+    .badge{display:inline-block;padding:6px 8px;border-radius:8px;background:#ecf8f3;color:#065a47;margin-left:6px;font-weight:700}
+    .center{text-align:center}
+    .note{color:var(--muted);font-size:13px;margin-top:6px}
+    .code-box{display:inline-block;padding:8px 10px;border-radius:8px;background:#f0f6f7;border:1px dashed #cfe7e9;margin-top:6px;font-family:monospace}
+    @media (max-width:700px){
+      .row{flex-direction:column}
+      th,td{font-size:13px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>سیستم حضور و غیاب دبیرستان</h1>
+  </header>
+
+  <main>
+    <section id="loginSection" class="card">
+      <h2>ورود دبیر</h2>
+      <div class="row">
+        <input type="text" id="username" placeholder="نام کاربری">
+        <input type="password" id="password" placeholder="رمز عبور">
+        <button id="loginBtn">ورود</button>
+        <div id="loginError" class="note" style="color:var(--danger)"></div>
+      </div>
+      <div class="note">مثال: کاربر <strong>مشاور</strong> برای مدیریت کلی سیستم.</div>
+    </section>
+
+    <section id="classSection" class="card hidden">
+      <h2>انتخاب کلاس</h2>
+      <div id="classButtons"></div>
+      <div class="controls">
+        <button id="logoutBtn" class="ghost">خروج</button>
+        <button id="reportAllBtn" class="secondary hidden">گزارش کلی مشاور</button>
+        <button id="manageTeachersBtn" class="ghost hidden">مدیریت دبیران</button>
+      </div>
+    </section>
+
+    <section id="attendanceSection" class="card hidden">
+      <h2 id="classTitle">کلاس</h2>
+      <div class="row">
+        <input type="text" id="searchStudent" placeholder="جستجو دانش‌آموز" style="flex:1">
+        <div id="classStatus" class="note"></div>
+        <button id="startClassBtn" class="small">شروع کلاس (ایجاد کد)</button>
+      </div>
+
+      <table id="attendanceTable">
+        <thead>
+          <tr>
+            <th>نام</th>
+            <th>وضعیت</th>
+            <th>+</th>
+            <th>-</th>
+            <th>نمره</th>
+            <th>تکالیف اضافی</th>
+            <th>تجمیع</th>
+            <th class="admin-col hidden">مدیریت</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="controls">
+        <button id="saveSessionBtn">ذخیره جلسه</button>
+        <button id="quickQBtn">پرسش سریع (Ctrl+Q)</button>
+        <button id="backToClasses" class="ghost">بازگشت به کلاس‌ها</button>
+      </div>
+    </section>
+
+    <section id="reportSection" class="card hidden">
+      <h2>گزارش کلی مشاور</h2>
+      <div id="reportContent"></div>
+      <div class="controls">
+        <button id="closeReportBtn" class="ghost">بستن</button>
+      </div>
+    </section>
+
+    <!-- Modal-like area for teacher management (simple) -->
+    <section id="teacherManageSection" class="card hidden">
+      <h2>مدیریت دبیران</h2>
+      <div id="teacherList"></div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="newTeacherName" placeholder="نام کاربری جدید (مثلاً علی)">
+        <input type="text" id="newTeacherDisplay" placeholder="نام نمایشی (مثلاً دکتر علی)">
+        <input type="text" id="newTeacherSubject" placeholder="درس (مثلاً ریاضی)">
+        <input type="text" id="newTeacherPassword" placeholder="رمز عبور">
+        <button id="addTeacherBtn">افزودن دبیر</button>
+        <button id="closeManageBtn" class="ghost">بستن</button>
+      </div>
+      <div class="note">مشاور می‌تواند دبیران را اضافه/حذف کند و تکالیف همه دبیران را از گزارش ببیند.</div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
